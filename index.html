@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gym Workout Schedule</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <h1>Workout Schedule</h1>
+
+    <!-- Form -->
+    <form id="sessionForm">
+      <input type="number" id="sessionID" placeholder="Session ID" required>
+      <input type="text" id="memberName" placeholder="Member Name" required>
+      <input type="text" id="trainerName" placeholder="Trainer Name" required>
+      <input type="date" id="date" required>
+      <input type="time" id="time" required>
+      <input type="text" id="workoutType" placeholder="Workout Type" required>
+
+      <button type="submit">Add Session</button>
+    </form>
+
+    <!-- Search -->
+    <div class="search">
+      <input type="text" id="searchName" placeholder="Search by Member Name">
+      <button id="searchBtn">Search</button>
+    </div>
+
+    <!-- Output -->
+    <div id="scheduleOutput"></div>
+  </div>
+
+    <div class="container">
+  <h1> Workout Schedule</h1>
+
+  <div class="card">
+    <form id="sessionForm">
+      ...
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="search">
+      ...
+    </div>
+  </div>
+
+  <div id="scheduleOutput"></div>
+</div>
+
+  <script src="app.js"></script>
+</body>
+</html>
