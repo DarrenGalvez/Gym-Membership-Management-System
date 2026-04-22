@@ -1,11 +1,17 @@
 #include <iostream>
-#include "Member.h"
+#include "Database.h"
+#include "Router.h"
 
 using namespace std;
 
 int main() {
-    Member m1(1, "John Doe", "123-4567");
-    m1.displayMember();
+    
+    Database db;
+    db.loadMembers();      
+    db.loadTrainers();     
+    db.loadPlans();        
 
+    Router router(db);
+    router.route();        
     return 0;
 }
