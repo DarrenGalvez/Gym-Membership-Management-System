@@ -1,71 +1,143 @@
-// I'll replace with backend later
-let sessions = [];
+const API = "http://localhost:3000/api/schedules";
+const MEMBER_API = "http://localhost:3000/api/members";
+const TRAINER_API = "http://localhost:3000/api/trainers";
 
-// DOM elements
 const form = document.getElementById("sessionForm");
 const output = document.getElementById("scheduleOutput");
-const searchBtn = document.getElementById("searchBtn");
+const table = document.getElementById("resultsTable");
+const tableBody = document.getElementById("resultsBody");
 
-// Add Session
-form.addEventListener("submit", (e) => {
+// --------------------
+// INIT
+// --------------------
+window.onload = () => {
+  loadSchedules();
+};
+
+// --------------------
+// SUBMIT SCHEDULE
+// --------------------
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const session = {
-    sessionID: Number(document.getElementById("sessionID").value),
-    memberName: document.getElementById("memberName").value,
-    trainerName: document.getElementById("trainerName").value,
+  const data = {
+    member_name: document.getElementById("memberName").value,
+    trainer_name: document.getElementById("trainerName").value,
     date: document.getElementById("date").value,
     time: document.getElementById("time").value,
-    workoutType: document.getElementById("workoutType").value
+    workout_type: document.getElementById("workoutType").value
   };
 
-  // Prevent duplicate ID
-  const exists = sessions.some(s => s.sessionID === session.sessionID);
+  try {
+    await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
 
-  if (exists) {
-    alert("Session ID already exists!");
+    form.reset();
+    loadSchedules();
+  } catch (error) {
+    console.error("Error submitting schedule:", error);
+    alert("Failed to add session. Check if backend is running.");
+  }
+});
+
+// --------------------
+// LOAD ALL
+// --------------------
+async function loadSchedules() {
+  try {
+    const res = await fetch(API);
+    if (!res.ok) throw new Error("Failed to fetch schedules");
+    
+    const data = await res.json();
+
+    // hide table when showing full cards
+    table.style.display = "none";
+
+    render(data);
+  } catch (error) {
+    console.error("Error loading schedules:", error);
+    output.innerHTML = "<p style='color:red;'>Error loading schedules. Ensure backend is running on http://localhost:3000</p>";
+  }
+}
+
+// --------------------
+// DELETE
+// --------------------
+async function deleteSchedule(id) {
+  try {
+    await fetch(`${API}/${id}`, { method: "DELETE" });
+    loadSchedules();
+  } catch (error) {
+    console.error("Error deleting schedule:", error);
+  }
+}
+
+// --------------------
+// SEARCH
+// --------------------
+document.getElementById("searchBtn").addEventListener("click", async () => {
+  const name = document.getElementById("searchName").value;
+
+  if (!name) {
+    table.style.display = "none";
+    loadSchedules();
     return;
   }
 
-  sessions.push(session);
-  displaySessions(sessions);
+  try {
+    const res = await fetch(`${API}/search?name=${encodeURIComponent(name)}`);
+    if (!res.ok) throw new Error("Search failed");
+    
+    const data = await res.json();
 
-  form.reset();
+    // Hide cards
+    output.innerHTML = "";
+
+    // Show table
+    table.style.display = "table";
+
+    if (data.length === 0) {
+      tableBody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No results found</td></tr>";
+      return;
+    }
+
+    tableBody.innerHTML = data.map(s => `
+      <tr>
+        <td>${s.member_name || "N/A"}</td>
+        <td>${s.trainer_name || "N/A"}</td>
+        <td>${s.date || "N/A"}</td>
+        <td>${s.time || "N/A"}</td>
+        <td>${s.workout_type || "N/A"}</td>
+      </tr>
+    `).join("");
+  } catch (error) {
+    console.error("Error searching schedules:", error);
+    output.innerHTML = "<p style='color:red;'>Search failed. Check backend connection.</p>";
+    table.style.display = "none";
+  }
 });
 
-// Display Sessions
-function displaySessions(data) {
-  output.innerHTML = "";
-
-  if (data.length === 0) {
+// --------------------
+// RENDER FUNCTION
+// --------------------
+function render(data) {
+  if (!data || data.length === 0) {
     output.innerHTML = "<p>No sessions available</p>";
     return;
   }
 
-  data.forEach(s => {
-    const div = document.createElement("div");
-    div.classList.add("session");
+  output.innerHTML = data.map(s => `
+    <div class="card">
+      <h3>${s.member_name || "Unknown Member"}</h3>
 
-    div.innerHTML = `
-      <strong>ID:</strong> ${s.sessionID}<br>
-      <strong>Member:</strong> ${s.memberName}<br>
-      <strong>Trainer:</strong> ${s.trainerName}<br>
-      <strong>Date:</strong> ${s.date}<br>
-      <strong>Time:</strong> ${s.time}<br>
-      <strong>Workout:</strong> ${s.workoutType}
-    `;
+      <p><b>Trainer:</b> ${s.trainer_name || "N/A"}</p>
 
-    output.appendChild(div);
-  });
+      <p><b>Date:</b> ${s.date ? new Date(s.date).toLocaleDateString() : "N/A"}</p>
+      <p><b>Time:</b> ${s.time || "N/A"}</p>
+      <p><b>Workout:</b> ${s.workout_type || "N/A"}</p>
+    </div>
+  `).join("");
 }
-
-// Search
-searchBtn.addEventListener("click", () => {
-  const name = document.getElementById("searchName").value;
-
-  const filtered = sessions.filter(
-    s => s.memberName.toLowerCase() === name.toLowerCase()
-  );
-
-  displaySessions(filtered);
-});
